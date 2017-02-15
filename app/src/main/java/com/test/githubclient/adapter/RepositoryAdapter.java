@@ -9,8 +9,8 @@ import android.widget.TextView;
 
 
 import com.test.githubclient.R;
-import com.test.githubclient.interfaces.RecycleViewOnClickListenerHack;
-import com.test.githubclient.model.Repository;
+import com.test.githubclient.interfaces.RecycleViewOnClickListener;
+import com.test.githubclient.model.Repo;
 
 import java.util.List;
 
@@ -19,51 +19,51 @@ import java.util.List;
  */
 
 public class RepositoryAdapter extends RecyclerView.Adapter<RepositoryAdapter.ViewHolder> {
-    private List<Repository> repositories;
-    private LayoutInflater layoutInflater;
-    private RecycleViewOnClickListenerHack mRecycleViewOnClickListenerHack;
+    private List<Repo> repositories;
+    //private LayoutInflater layoutInflater;
+    private RecycleViewOnClickListener mRecycleViewOnClickListener;
 
-    public RepositoryAdapter(List<Repository> repositories, Context context) {
+    public RepositoryAdapter(List<Repo> repositories, Context context) {
         this.repositories = repositories;
-        layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        //layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public TextView title1;
-        public TextView title2;
+        public TextView name;
+        public TextView description;
 
         public ViewHolder(View view) {
             super(view);
-            title1 = (TextView) view.findViewById(R.id.title1);
-            title2 = (TextView) view.findViewById(R.id.title2);
+            name = (TextView) view.findViewById(R.id.title1);
+            description = (TextView) view.findViewById(R.id.title2);
 
             view.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            if(mRecycleViewOnClickListenerHack != null)
-                mRecycleViewOnClickListenerHack.onClickListener(v, getPosition());
+            if(mRecycleViewOnClickListener != null)
+                mRecycleViewOnClickListener.onClickListener(v, getPosition());
         }
     }
 
     @Override
     public RepositoryAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = layoutInflater.inflate(R.layout.repository_list_layout, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.repository_list_layout, parent, false);
         ViewHolder vh = new ViewHolder(v);
         return vh;
     }
 
     @Override
     public void onBindViewHolder(RepositoryAdapter.ViewHolder holder, int position) {
-        holder.title1.setText(repositories.get(position).getTitle1());
-        holder.title2.setText(repositories.get(position).getTitle2());
+        holder.name.setText(repositories.get(position).getName());
+        holder.description.setText(repositories.get(position).getDescription());
 
     }
 
-    public void setmRecycleViewOnClickListenerHack(RecycleViewOnClickListenerHack mRecycleViewOnClickListenerHack) {
-        this.mRecycleViewOnClickListenerHack = mRecycleViewOnClickListenerHack;
+    public void setmRecycleViewOnClickListener(RecycleViewOnClickListener mRecycleViewOnClickListener) {
+        this.mRecycleViewOnClickListener = mRecycleViewOnClickListener;
     }
 
     @Override

@@ -4,25 +4,34 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.test.githubclient.adapter.RepositoryAdapter;
-import com.test.githubclient.interfaces.RecycleViewOnClickListenerHack;
-import com.test.githubclient.model.Repository;
+import com.test.githubclient.interfaces.GitHubService;
+import com.test.githubclient.interfaces.RecycleViewOnClickListener;
+import com.test.githubclient.model.Repo;
+import com.test.githubclient.model.RepoDeserializer;
 
-import java.util.ArrayList;
+import java.util.List;
 
-public class RepoListActivity extends AppCompatActivity implements RecycleViewOnClickListenerHack {
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
+
+public class RepoListActivity extends AppCompatActivity implements RecycleViewOnClickListener {
     RecyclerView recyclerView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
         setContentView(R.layout.repo_list);
         recyclerView = (RecyclerView) findViewById(R.id.recycler);
         loadListOfRepositorys();
-
-        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -31,24 +40,34 @@ public class RepoListActivity extends AppCompatActivity implements RecycleViewOn
     }
 
     public void loadListOfRepositorys() {
-        ArrayList<Repository> testList = new ArrayList<>();
-        Repository repository1 = new Repository();
-        repository1.setTitle1("Repositorio1");
-        repository1.setTitle2("Subtitulo1");
 
-        Repository repository2 = new Repository();
-        repository2.setTitle1("Repositorio2");
-        repository2.setTitle2("Subtitulo2");
+        Gson gson = new GsonBuilder().registerTypeAdapter(Repo.class, new RepoDeserializer()).create();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.github.com/")
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
 
-        testList.add(repository1);
-        testList.add(repository2);
+        GitHubService gitHubService = retrofit.create(GitHubService.class);
+        Call<List<Repo>> repositories = gitHubService.listRepos("JonatasAlbano");
+        repositories.enqueue(new Callback<List<Repo>>() {
+            @Override
+            public void onResponse(Response<List<Repo>> response, Retrofit retrofit) {
+                if(response.isSuccess()) {
+                    List<Repo> repos = response.body();
+                    RepositoryAdapter repoAdapter = new RepositoryAdapter(repos, RepoListActivity.this);
+                    repoAdapter.setmRecycleViewOnClickListener(RepoListActivity.this);
+                    LinearLayoutManager lln = new LinearLayoutManager(RepoListActivity.this);
+                    lln.setOrientation(LinearLayoutManager.VERTICAL);
+                    recyclerView.setLayoutManager(lln);
+                    recyclerView.setAdapter(repoAdapter);
+                }
+            }
 
-        RepositoryAdapter repoAdapter = new RepositoryAdapter(testList, this);
-        repoAdapter.setmRecycleViewOnClickListenerHack(this);
-        LinearLayoutManager lln = new LinearLayoutManager(this);
-        lln.setOrientation(LinearLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(lln);
-        recyclerView.setAdapter(repoAdapter);
+            @Override
+            public void onFailure(Throwable t) {
+                Toast.makeText(getApplicationContext(), "Erro: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
